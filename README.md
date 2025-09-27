@@ -224,6 +224,13 @@ Die Anwendung ist dann unter http://127.0.0.1:5000 erreichbar.## API Endpoints
 - Design-Evolution verstehen
 - Skalierbarkeit bewerten
 
+### 📊 **Detaillierter Vergleich**
+👉 **[Vollständiger Vergleichsguide](https://github.com/freewimoe/flask-tutorial-comparison)**
+
+### 🔗 **Verwandte Repositories**
+- 🟢 **[Flask Tutorial V1 (Grundlagen)](https://github.com/freewimoe/flask-tutorial-v1)** - Die einfache Lernversion
+- 📚 **[Vergleichsguide](https://github.com/freewimoe/flask-tutorial-comparison)** - Detaillierte Gegenüberstellung
+
 ## 🛠️ Für Entwickler & Lehrer
 
 ### Code-Analyse Übungen:
