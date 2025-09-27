@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-custom fixed-top">
+        <div class="container">
+            <a class="navbar-brand" href="{{ url_for('home') }}">
+                <i class="fas fa-shield-alt"></i> Admin Panel
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('home') }}"><i class="fas fa-home"></i> Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('dashboard') }}"><i class="fas fa-chart-pie"></i> Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="{{ url_for('admin_dashboard') }}"><i class="fas fa-cog"></i> Admin</a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt"></i> Abmelden</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container" style="margin-top: 100px;">
+        <!-- Admin Header -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="dashboard-card">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h1 class="mb-2">Admin Dashboard 🛠️</h1>
+                            <p class="text-muted mb-0">Verwalte Benutzer, Posts und System-Einstellungen.</p>
+                        </div>
+                        <div class="d-none d-md-block">
+                            <i class="fas fa-users-cog" style="font-size: 4rem; color: var(--primary-color); opacity: 0.3;"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Admin Statistics -->
+        <div class="row mb-4">
+            <div class="col-md-4 mb-3">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="stat-number">{{ total_users }}</div>
+                    <div class="stat-label">Gesamt Benutzer</div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-newspaper"></i>
+                    </div>
+                    <div class="stat-number">{{ total_posts }}</div>
+                    <div class="stat-label">Gesamt Posts</div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <div class="stat-number">{{ "%.1f"|format((total_posts / total_users) if total_users > 0 else 0) }}</div>
+                    <div class="stat-label">Posts pro User</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts Section -->
+        <div class="row mb-4">
+            <div class="col-md-8 mb-3">
+                <div class="dashboard-card">
+                    <h4 class="mb-3">Posts über Zeit (letzte 30 Tage)</h4>
+                    <div class="chart-container">
+                        <canvas id="postsChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="dashboard-card">
+                    <h4 class="mb-3">Top Autoren</h4>
+                    <div class="chart-container">
+                        <canvas id="topUsersChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Management Sections -->
+        <div class="row">
+            <div class="col-md-6 mb-4">
+                <div class="dashboard-card">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h4 class="mb-0">Neueste Benutzer</h4>
+                        <button class="btn btn-primary-custom btn-custom btn-sm" data-bs-toggle="modal" data-bs-target="#userModal">
+                            <i class="fas fa-user-plus"></i> User hinzufügen
+                        </button>
+                    </div>
+                    
+                    <div class="table-responsive">
+                        <table class="table table-custom">
+                            <thead>
+                                <tr>
+                                    <th>Benutzername</th>
+                                    <th>Email</th>
+                                    <th>Registriert</th>
+                                    <th>Aktionen</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for user in recent_users %}
+                                <tr>
+                                    <td class="fw-bold">{{ user.username }}</td>
+                                    <td>{{ user.email }}</td>
+                                    <td>
+                                        <small class="text-muted">{{ user.created_at.strftime('%d.%m.%Y') }}</small>
+                                    </td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-info" onclick="viewUser('{{ user.id }}')">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-warning">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-danger">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6 mb-4">
+                <div class="dashboard-card">
+                    <h4 class="mb-3">System Status</h4>
+                    
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span>Server Status</span>
+                            <span class="badge bg-success">Online</span>
+                        </div>
+                        <div class="progress-custom">
+                            <div class="progress-bar-custom" style="width: 95%"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span>Database</span>
+                            <span class="badge bg-success">Connected</span>
+                        </div>
+                        <div class="progress-custom">
+                            <div class="progress-bar-custom" style="width: 87%"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span>Disk Usage</span>
+                            <span class="badge bg-warning">65%</span>
+                        </div>
+                        <div class="progress-custom">
+                            <div class="progress-bar-custom" style="width: 65%"></div>
+                        </div>
+                    </div>
+
+                    <div class="row text-center mt-4">
+                        <div class="col-4">
+                            <button class="btn btn-success-custom btn-custom btn-sm w-100">
+                                <i class="fas fa-sync"></i> Refresh
+                            </button>
+                        </div>
+                        <div class="col-4">
+                            <button class="btn btn-secondary-custom btn-custom btn-sm w-100">
+                                <i class="fas fa-download"></i> Backup
+                            </button>
+                        </div>
+                        <div class="col-4">
+                            <button class="btn btn-danger-custom btn-custom btn-sm w-100">
+                                <i class="fas fa-power-off"></i> Restart
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Admin Actions -->
+        <div class="row">
+            <div class="col-12">
+                <div class="dashboard-card">
+                    <h4 class="mb-3">Admin Aktionen</h4>
+                    <div class="quick-actions">
+                        <button class="quick-action" onclick="clearCache()">
+                            <i class="fas fa-broom"></i>
+                            <div class="fw-bold">Cache leeren</div>
+                            <small class="text-muted">System-Cache zurücksetzen</small>
+                        </button>
+                        <button class="quick-action" onclick="exportData()">
+                            <i class="fas fa-download"></i>
+                            <div class="fw-bold">Daten exportieren</div>
+                            <small class="text-muted">Alle Daten als JSON</small>
+                        </button>
+                        <button class="quick-action" data-bs-toggle="modal" data-bs-target="#settingsModal">
+                            <i class="fas fa-cogs"></i>
+                            <div class="fw-bold">Einstellungen</div>
+                            <small class="text-muted">System konfigurieren</small>
+                        </button>
+                        <button class="quick-action" onclick="viewLogs()">
+                            <i class="fas fa-list"></i>
+                            <div class="fw-bold">Logs anzeigen</div>
+                            <small class="text-muted">System-Protokolle</small>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- User Modal -->
+    <div class="modal fade modal-custom" id="userModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-user-plus"></i> Neuer Benutzer</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form>
+                        <div class="mb-3">
+                            <label class="form-label">Benutzername</label>
+                            <input type="text" class="form-control form-control-custom" placeholder="Benutzername eingeben">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Email</label>
+                            <input type="email" class="form-control form-control-custom" placeholder="email@example.com">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Passwort</label>
+                            <input type="password" class="form-control form-control-custom" placeholder="Sicheres Passwort">
+                        </div>
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="adminCheck">
+                                <label class="form-check-label" for="adminCheck">
+                                    Admin Berechtigung
+                                </label>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Abbrechen</button>
+                    <button type="button" class="btn btn-primary-custom btn-custom">Benutzer erstellen</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div class="modal fade modal-custom" id="settingsModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-cogs"></i> System Einstellungen</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Allgemeine Einstellungen</h6>
+                            <div class="mb-3">
+                                <label class="form-label">Site Name</label>
+                                <input type="text" class="form-control form-control-custom" value="Flask Dashboard">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Max Posts pro User</label>
+                                <input type="number" class="form-control form-control-custom" value="50">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Sicherheitseinstellungen</h6>
+                            <div class="mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="registrationEnabled" checked>
+                                    <label class="form-check-label" for="registrationEnabled">
+                                        Neue Registrierungen erlauben
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="maintenanceMode">
+                                    <label class="form-check-label" for="maintenanceMode">
+                                        Wartungsmodus aktivieren
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Abbrechen</button>
+                    <button type="button" class="btn btn-primary-custom btn-custom">Einstellungen speichern</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Posts over time chart
+        const postsCtx = document.getElementById('postsChart').getContext('2d');
+        const postsData = {
+            labels: [{% for post in daily_posts %}'{{ post.date.strftime("%d.%m") }}'{{ ',' if not loop.last }}{% endfor %}],
+            datasets: [{
+                label: 'Posts',
+                data: [{% for post in daily_posts %}{{ post.count }}{{ ',' if not loop.last }}{% endfor %}],
+                borderColor: '#3b82f6',
+                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                borderWidth: 2,
+                fill: true,
+                tension: 0.4
+            }]
+        };
+        
+        new Chart(postsCtx, {
+            type: 'line',
+            data: postsData,
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    y: { beginAtZero: true, ticks: { precision: 0 } }
+                }
+            }
+        });
+        
+        // Top users chart
+        const topUsersCtx = document.getElementById('topUsersChart').getContext('2d');
+        const topUsersData = {
+            labels: [{% for user in top_users %}'{{ user.username }}'{{ ',' if not loop.last }}{% endfor %}],
+            datasets: [{
+                data: [{% for user in top_users %}{{ user.post_count }}{{ ',' if not loop.last }}{% endfor %}],
+                backgroundColor: [
+                    '#3b82f6', '#8b5cf6', '#10b981', '#f59e0b', '#ef4444'
+                ]
+            }]
+        };
+        
+        new Chart(topUsersCtx, {
+            type: 'doughnut',
+            data: topUsersData,
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'bottom' }
+                }
+            }
+        });
+        
+        // Admin functions
+        function viewUser(userId) {
+            alert(`Zeige Details für User ID: ${userId}`);
+        }
+        
+        function clearCache() {
+            alert('Cache wird geleert...');
+        }
+        
+        function exportData() {
+            alert('Daten werden exportiert...');
+        }
+        
+        function viewLogs() {
+            alert('System-Logs werden geladen...');
+        }
+    </script>
+</body>
+</html>

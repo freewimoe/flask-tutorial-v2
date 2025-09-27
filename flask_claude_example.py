@@ -120,8 +120,132 @@ def dashboard():
         return redirect(url_for('login'))
     
     user = User.query.get(session['user_id'])
-    user_posts = Post.query.filter_by(user_id=user.id).order_by(Post.created_at.desc()).all()
-    return render_template('dashboard.html', user=user, posts=user_posts)
+    
+    # Dashboard Statistics
+    total_users = User.query.count()
+    total_posts = Post.query.count()
+    user_posts = Post.query.filter_by(user_id=user.id).count()
+    recent_posts = Post.query.order_by(Post.created_at.desc()).limit(5).all()
+    
+    # User activity (posts per day for last 7 days)
+    from datetime import datetime, timedelta
+    last_week = datetime.utcnow() - timedelta(days=7)
+    recent_activity = db.session.query(Post.created_at).filter(
+        Post.created_at >= last_week,
+        Post.user_id == user.id
+    ).all()
+    
+    # Process activity data for charts
+    activity_data = {}
+    for i in range(7):
+        date = (datetime.utcnow() - timedelta(days=i)).strftime('%Y-%m-%d')
+        activity_data[date] = 0
+    
+    for post in recent_activity:
+        date_key = post.created_at.strftime('%Y-%m-%d')
+        if date_key in activity_data:
+            activity_data[date_key] += 1
+    
+    return render_template('dashboard.html', 
+                         user=user, 
+                         total_users=total_users,
+                         total_posts=total_posts,
+                         user_posts=user_posts,
+                         recent_posts=recent_posts,
+                         activity_data=activity_data)
+
+@app.route('/admin')
+def admin_dashboard():
+    if 'user_id' not in session:
+        flash('Bitte zuerst anmelden!', 'error')
+        return redirect(url_for('login'))
+    
+    # For demo purposes, any logged-in user can access admin
+    # In production, you'd check for admin role
+    
+    # Admin Statistics
+    total_users = User.query.count()
+    total_posts = Post.query.count()
+    
+    # Recent users (last 10)
+    recent_users = User.query.order_by(User.created_at.desc()).limit(10).all()
+    
+    # Top users by post count
+    top_users = db.session.query(
+        User.username,
+        db.func.count(Post.id).label('post_count')
+    ).join(Post).group_by(User.id).order_by(
+        db.func.count(Post.id).desc()
+    ).limit(5).all()
+    
+    # Posts by day (last 30 days)
+    from datetime import datetime, timedelta
+    last_month = datetime.utcnow() - timedelta(days=30)
+    daily_posts = db.session.query(
+        db.func.date(Post.created_at).label('date'),
+        db.func.count(Post.id).label('count')
+    ).filter(Post.created_at >= last_month).group_by(
+        db.func.date(Post.created_at)
+    ).all()
+    
+    return render_template('admin_dashboard.html',
+                         total_users=total_users,
+                         total_posts=total_posts,
+                         recent_users=recent_users,
+                         top_users=top_users,
+                         daily_posts=daily_posts)
+
+@app.route('/api/dashboard/stats')
+def api_dashboard_stats():
+    if 'user_id' not in session:
+        return jsonify({'error': 'Not authenticated'}), 401
+    
+    user_id = session['user_id']
+    
+    # Real-time stats
+    stats = {
+        'user_posts': Post.query.filter_by(user_id=user_id).count(),
+        'total_posts': Post.query.count(),
+        'total_users': User.query.count(),
+        'last_post_date': None
+    }
+    
+    last_post = Post.query.filter_by(user_id=user_id).order_by(Post.created_at.desc()).first()
+    if last_post:
+        stats['last_post_date'] = last_post.created_at.isoformat()
+    
+    return jsonify(stats)
+
+@app.route('/api/dashboard/activity')
+def api_dashboard_activity():
+    if 'user_id' not in session:
+        return jsonify({'error': 'Not authenticated'}), 401
+    
+    from datetime import datetime, timedelta
+    
+    # Get activity data for the last 30 days
+    last_30_days = datetime.utcnow() - timedelta(days=30)
+    activity = db.session.query(
+        db.func.date(Post.created_at).label('date'),
+        db.func.count(Post.id).label('posts')
+    ).filter(
+        Post.created_at >= last_30_days,
+        Post.user_id == session['user_id']
+    ).group_by(
+        db.func.date(Post.created_at)
+    ).all()
+    
+    # Format for Chart.js
+    dates = []
+    counts = []
+    for item in activity:
+        dates.append(item.date.strftime('%Y-%m-%d'))
+        counts.append(item.posts)
+    
+    return jsonify({
+        'labels': dates,
+        'data': counts
+    })
 
 @app.route('/create_post', methods=['GET', 'POST'])
 def create_post():
