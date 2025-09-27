@@ -1,0 +1,6 @@
+Flask
+Flask-SQLAlchemy
+Flask-WTF
+requests
+Werkzeug==2.3.8
+email-validator

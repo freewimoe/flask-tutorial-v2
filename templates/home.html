@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <header>
+        <h1>Willkommen auf meinem Blog</h1>
+        <nav>
+            <a href="{{ url_for('home') }}">Home</a>
+            {% if 'user_id' in session %}
+                <a href="{{ url_for('create_post') }}">Post erstellen</a>
+                <a href="{{ url_for('upload_file') }}">Datei hochladen</a>
+                <a href="{{ url_for('logout') }}">Abmelden</a>
+            {% else %}
+                <a href="{{ url_for('login') }}">Anmelden</a>
+                <a href="{{ url_for('register') }}">Registrieren</a>
+            {% endif %}
+        </nav>
+    </header>
+    <main>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <ul class="flashes">
+                {% for category, message in messages %}
+                    <li class="{{ category }}">{{ message }}</li>
+                {% endfor %}
+                </ul>
+            {% endif %}
+        {% endwith %}
+        
+        <h2>Letzte Posts</h2>
+        {% for post in posts %}
+            <article>
+                <h3>{{ post.title }}</h3>
+                <p>{{ post.content }}</p>
+                <small>Erstellt am {{ post.created_at.strftime('%Y-%m-%d') }}</small>
+            </article>
+        {% else %}
+            <p>Noch keine Posts vorhanden.</p>
+        {% endfor %}
+    </main>
+</body>
+</html>
