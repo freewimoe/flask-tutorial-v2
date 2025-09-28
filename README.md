@@ -128,7 +128,31 @@ python flask_claude_example.py└── uploads/                   # Hochgeladen
 
 
 
-Die Anwendung ist dann unter http://127.0.0.1:5000 erreichbar.## API Endpoints
+Die Anwendung ist dann unter http://127.0.0.1:5000 erreichbar.
+
+## 🚀 **Live-Demo deployen**
+
+Diese erweiterte App ist **deployment-ready** für [Railway](https://railway.app) (kostenlos mit Credits!):
+
+### ⚡ **One-Click Deployment:**
+[![Deploy on Railway](https://railway.app/button.svg)](https://railway.app)
+
+### 📋 **Oder manuell deployen:**
+1. Railway Account erstellen (GitHub-Login)
+2. "Deploy from GitHub repo" → Dieses Repository auswählen
+3. Railway erkennt automatisch Python/Flask
+4. Deployment startet automatisch!
+
+**📖 Detaillierte Anleitung:** [DEPLOYMENT.md](DEPLOYMENT.md)
+
+### 🌐 **Live-Demo Features:**
+- 📊 **Interaktives Dashboard** mit Chart.js
+- 👑 **Admin-Panel** mit User-Management
+- 🎨 **Bootstrap 5** responsive Design
+- ⚡ **API Endpoints** für Real-time Updates
+- 🔄 **Auto-Deployments** bei GitHub Push
+
+**🔗 Live-URL:** Nach Deployment verfügbar unter Railway-Domain## API Endpoints
 
 
 
